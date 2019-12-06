@@ -1,0 +1,366 @@
+/dts-v1/;
+
+#include "am33xx.dtsi"
+#include "am335x-osd335x-common.dtsi"
+ 
+ / {
+	model = "Tigbis OSD3358 Microrouter";
+	compatible = "tig,osd3358-microrouter", "ti,am33xx";
+	
+ 	vmmcsd_fixed: fixedregulator@0 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vmmcsd_fixed";
+ 		regulator-min-microvolt = <3300000>;
+ 		regulator-max-microvolt = <3300000>;
+ 	};
+	
+	lte_control {
+		compatible = "gpio-leds";
+		
+		lte_pe {
+			gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+		
+		lte_rst {
+			gpios = <&gpio1 22 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+		
+		lte_radio_dis {
+			gpios = <&gpio2 0 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+	};
+ 
+	 wifi_control {
+		compatible = "gpio-leds";
+		
+		wifi_on {
+			gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+		
+		bt_on {
+			gpios = <&gpio1 24 GPIO_ACTIVE_HIGH>;
+			default-state = "off";
+		};
+	 };
+ };
+ 
+ &gpio1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gpio1_pins_default>;
+	status = "okay";
+ };
+ 
+ &gpio2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&gpio2_pins_default>;
+	status = "okay";
+ };
+
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pins>;
+
+ 	status = "okay";
+ };
+ 
+ &uart1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&bt_pins_default>;
+
+ 	status = "okay";
+ };
+ 
+ &uart4 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&lte_pins_default>;
+
+ 	status = "okay";
+ };
+
+ &usb {
+ 	status = "okay";
+ };
+
+ &usb_ctrl_mod {
+ 	status = "okay";
+ };
+
+ &usb0_phy {
+ 	status = "okay";
+ };
+
+ &usb1_phy {
+ 	status = "okay";
+ };
+
+ &usb0 {
+ 	status = "okay";
+ 	dr_mode = "otg";
+ };
+
+ &usb1 {
+ 	status = "okay";
+ 	dr_mode = "host";
+ };
+
+ &cppi41dma  {
+ 	status = "okay";
+ };
+
+&ldo3_reg {
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1800000>;
+	regulator-always-on;
+};
+
+&mmc1 {
+  status = "okay";
+  bus-width = <0x4>;
+  pinctrl-names = "default";
+  pinctrl-0 = <&sd_card_pins_default>;
+
+	vmmc-supply = <&vmmcsd_fixed>;
+};
+
+&mmc2 {
+  #address-cells = <1>;
+  #size-cells = <0>;
+  status = "okay";
+  bus-width = <0x4>;
+  pinctrl-names = "default";
+  pinctrl-0 = <&wifi_pins_default>;
+  ti,non-removable;
+  //vmmc-supply = <&vmmcsd_fixed>;
+
+	brcmf: bcrmf@1 {
+		reg = <1>;
+		compatible = "brcm,bcm4329-fmac";
+	};
+};
+
+
+&cpu0_opp_table {
+	/*
+	 * All PG 2.0 silicon may not support 1GHz but some of the early
+	 * BeagleBone Blacks have PG 2.0 silicon which is guaranteed
+	 * to support 1GHz OPP so enable it for PG 2.0 on this board.
+	 */
+	oppnitro@1000000000 {
+		opp-supported-hw = <0x06 0x0100>;
+	};
+};
+
+&aes {
+	status = "okay";
+};
+
+&sham {
+	status = "okay";
+};
+
+&wkup_m3_ipc {
+	ti,scale-data-fw = "am335x-bone-scale-data.bin";
+};
+
+&am33xx_pinmux {
+
+	gpio1_pins_default: gpio1_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x83c, PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* (U13) gpmc_ad15.gpio1[15] LTE Power En*/
+			AM33XX_IOPAD(0x858, PIN_OUTPUT_PULLUP | MUX_MODE7) /* (U15) gpmc_a6.gpio1[22] LTE Reset*/
+			AM33XX_IOPAD(0x85c, PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* (T15) gpmc_a7.gpio1[23] Wifi On*/
+			AM33XX_IOPAD(0x860, PIN_OUTPUT_PULLDOWN | MUX_MODE7) /* (V16) gpmc_a8.gpio1[24] BT On*/
+		>;
+	};
+	
+	gpio2_pins_default: gpio2_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x888, PIN_OUTPUT_PULLUP | MUX_MODE7) /* (T13) gpmc_csn3.gpio2[0] - LTE Radio Disable*/
+			AM33XX_IOPAD(0x88c, PIN_INPUT_PULLUP | MUX_MODE7) /* (V12) gpmc_clk.gpio2[1] - Reset Config*/
+		>;
+	};
+	
+	usb_i2c_pins_default: usb_i2c_pins_default {
+	pinctrl-single,pins = <
+		AM33XX_IOPAD(0x96c, PIN_INPUT | MUX_MODE3) /* (E17) uart0_rtsn.I2C1_SCL */
+		AM33XX_IOPAD(0x968, PIN_INPUT | MUX_MODE3) /* (E18) uart0_ctsn.I2C1_SDA */
+	>;
+	};
+
+	uart0_pins: pinmux_uart0_pins {
+	  pinctrl-single,pins = <
+		AM33XX_IOPAD(0x970, PIN_INPUT_PULLUP | MUX_MODE0)	/* uart0_rxd.uart0_rxd */
+		AM33XX_IOPAD(0x974, PIN_OUTPUT_PULLDOWN | MUX_MODE0)	/* uart0_txd.uart0_txd */
+	  >;
+	};
+
+	eth_mdio_pins_default: eth_mdio_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x94c, PIN_OUTPUT | MUX_MODE0) /* (M18) mdio_clk.mdio_clk */
+			AM33XX_IOPAD(0x948, PIN_INPUT | MUX_MODE0) /* (M17) mdio_data.mdio_data */
+			AM33XX_IOPAD(0x878, PIN_OUTPUT_PULLUP | MUX_MODE7) /* (U18) gpmc_be1n.gpio1[28] ETH Reset*/
+		>;
+	};
+	
+	sd_card_pins_default: sd_card_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x900, PIN_INPUT | MUX_MODE0) /* (G17) mmc0_clk.mmc0_clk */
+			AM33XX_IOPAD(0x904, PIN_INPUT | MUX_MODE0) /* (G18) mmc0_cmd.mmc0_cmd */
+			AM33XX_IOPAD(0x8fc, PIN_INPUT | MUX_MODE0) /* (G16) mmc0_dat0.mmc0_dat0 */
+			AM33XX_IOPAD(0x8f8, PIN_INPUT | MUX_MODE0) /* (G15) mmc0_dat1.mmc0_dat1 */
+			AM33XX_IOPAD(0x8f4, PIN_INPUT | MUX_MODE0) /* (F18) mmc0_dat2.mmc0_dat2 */
+			AM33XX_IOPAD(0x8f0, PIN_INPUT | MUX_MODE0) /* (F17) mmc0_dat3.mmc0_dat3 */
+		>;
+	};
+	
+	wifi_pins_default: wifi_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x880, PIN_INPUT | MUX_MODE2) /* (U9) gpmc_csn1.mmc1_clk */
+			AM33XX_IOPAD(0x884, PIN_INPUT | MUX_MODE2) /* (V9) gpmc_csn2.mmc1_cmd */
+			AM33XX_IOPAD(0x800, PIN_INPUT | MUX_MODE1) /* (U7) gpmc_ad0.mmc1_dat0 */
+			AM33XX_IOPAD(0x804, PIN_INPUT | MUX_MODE1) /* (V7) gpmc_ad1.mmc1_dat1 */
+			AM33XX_IOPAD(0x808, PIN_INPUT | MUX_MODE1) /* (R8) gpmc_ad2.mmc1_dat2 */
+			AM33XX_IOPAD(0x80c, PIN_INPUT | MUX_MODE1) /* (T8) gpmc_ad3.mmc1_dat3 */
+		>;
+	};
+	
+	myrmii1_pins_default: myrmii1_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x90c, PIN_INPUT_PULLUP | MUX_MODE1) /* (H17) gmii1_crs.rmii1_crs_dv */
+			AM33XX_IOPAD(0x910, PIN_INPUT_PULLDOWN | MUX_MODE1) /* (J15) gmii1_rxer.rmii1_rxer */
+			AM33XX_IOPAD(0x914, PIN_OUTPUT_PULLDOWN | MUX_MODE1) /* (J16) gmii1_txen.rmii1_txen */
+			AM33XX_IOPAD(0x928, PIN_OUTPUT_PULLDOWN | MUX_MODE1) /* (K17) gmii1_txd0.rmii1_txd0 */
+			AM33XX_IOPAD(0x924, PIN_OUTPUT_PULLDOWN | MUX_MODE1) /* (K16) gmii1_txd1.rmii1_txd1 */
+			AM33XX_IOPAD(0x940, PIN_INPUT_PULLUP | MUX_MODE1) /* (M16) gmii1_rxd0.rmii1_rxd0 */
+			AM33XX_IOPAD(0x93c, PIN_INPUT_PULLUP | MUX_MODE1) /* (L15) gmii1_rxd1.rmii1_rxd1 */
+			AM33XX_IOPAD(0x944, PIN_INPUT_PULLUP | MUX_MODE0) /* (H18) rmii1_refclk.rmii1_refclk */
+		>;
+	};
+	
+	spi_flash_pins_default: spi_flash_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x950, PIN_INPUT_PULLDOWN | MUX_MODE0) /* (A17) spi0_sclk.spi0_sclk */
+			AM33XX_IOPAD(0x954, PIN_INPUT_PULLUP | MUX_MODE0) /* (B17) spi0_d0.spi0_d0 */
+			AM33XX_IOPAD(0x958, PIN_INPUT_PULLDOWN | MUX_MODE0) /* (B16) spi0_d1.spi0_d1 */
+			AM33XX_IOPAD(0x95c, PIN_INPUT_PULLUP | MUX_MODE0) /* (A16) spi0_cs0.spi0_cs0 */
+		>;
+	};
+	
+	lte_pins_default: lte_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x870, PIN_INPUT | MUX_MODE6) /* (T17) gpmc_wait0.uart4_rxd */
+			AM33XX_IOPAD(0x874, PIN_OUTPUT | MUX_MODE6) /* (U17) gpmc_wpn.uart4_txd */
+		>;
+	};
+
+	bt_pins_default: bt_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x980, PIN_INPUT | MUX_MODE0) /* (D16) uart1_rxd.uart1_rxd */
+			AM33XX_IOPAD(0x984, PIN_OUTPUT | MUX_MODE0) /* (D15) uart1_txd.uart1_txd */
+		>;
+	};
+
+};
+
+&i2c0 {
+
+	baseboard_eeprom: baseboard_eeprom@50 {
+    compatible = "at,24c256";
+    reg = <0x50>;
+
+    #address-cells = <1>;
+    #size-cells = <1>;
+    baseboard_data: baseboard_data@0 {
+      reg = <0 0x100>;
+    };
+  };
+
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb_i2c_pins_default>;
+	status = "okay";
+
+};
+
+&mac {
+	pinctrl-names = "default";
+	pinctrl-0 = <&myrmii1_pins_default>;
+	status = "okay";
+	slaves = <1>;
+};
+
+&cpsw_emac0 {
+	phy_id = <&davinci_mdio>, <0>;
+    phy-mode = "rmii";
+};
+
+
+&davinci_mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth_mdio_pins_default>;
+	status = "okay";
+	reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+    reset-delay-us = <100>;
+};
+
+&phy_sel {
+    rmii-clock-ext;
+};
+
+
+&spi0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi_flash_pins_default>;
+
+	spi_nor: flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "issi,is25lp512", "jedec,spi-nor";
+		spi-max-frequency = <80000000>;
+		m25p,fast-read;
+		reg = <0>;
+
+		partition@0 {
+			label = "u-boot-spl";
+			reg = <0x0 0x20000>;
+			read-only;
+		};
+
+		partition@1 {
+			label = "u-boot";
+			reg = <0x20000 0x100000>;
+			read-only;
+		};
+
+		partition@2 {
+			label = "u-boot-env";
+			reg = <0x120000 0x10000>;
+			read-only;
+		};
+		
+		partition@3 {
+			label = "u-boot-env-bak";
+			reg = <0x130000 0x10000>;
+			read-only;
+		};
+
+
+		partition@4 {
+			label = "misc";
+			reg = <0x140000 0x660000>;
+		};
+	};
+
+};
+
+&rtc {
+	clocks = <&clk_32768_ck>, <&l4_per_clkctrl AM3_CLKDIV32K_CLKCTRL 0>;
+	clock-names = "ext-clk", "int-clk";
+};
