@@ -14,6 +14,16 @@
  		regulator-max-microvolt = <3300000>;
  	};
 	
+	vmmcwifi_fixed: fixedregulator@1 {
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vmmcwifi_fixed";
+ 		regulator-min-microvolt = <3300000>;
+ 		regulator-max-microvolt = <3300000>;
+		
+		gpio = <&gpio1 23 0>;
+		enable-active-high;
+ 	};
+	
 	lte_control {
 		compatible = "gpio-leds";
 		
@@ -36,10 +46,10 @@
 	 wifi_control {
 		compatible = "gpio-leds";
 		
-		wifi_on {
+		/*wifi_on {
 			gpios = <&gpio1 23 GPIO_ACTIVE_HIGH>;
 			default-state = "off";
-		};
+		};*/
 		
 		bt_on {
 			gpios = <&gpio1 24 GPIO_ACTIVE_HIGH>;
@@ -122,19 +132,28 @@
   bus-width = <0x4>;
   pinctrl-names = "default";
   pinctrl-0 = <&sd_card_pins_default>;
-
+  broken-cd;
+  
 	vmmc-supply = <&vmmcsd_fixed>;
 };
 
 &mmc2 {
   #address-cells = <1>;
   #size-cells = <0>;
+  
+  /* xbar-event-map element */
+  dmas = <&edma 12 0 &edma 13 0>;
+  dma-names = "tx", "rx";
   status = "okay";
+  max-frequency = <20000000>;
   bus-width = <0x4>;
   pinctrl-names = "default";
   pinctrl-0 = <&wifi_pins_default>;
-  ti,non-removable;
-  //vmmc-supply = <&vmmcsd_fixed>;
+  //ti,non-removable;
+  broken-cd;
+  ti,needs-special-hs-handling;
+  
+  vmmc-supply = <&vmmcwifi_fixed>;
 
 	brcmf: bcrmf@1 {
 		reg = <1>;
@@ -305,8 +324,8 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&eth_mdio_pins_default>;
 	status = "okay";
-	reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
-    reset-delay-us = <100>;
+	//reset-gpios = <&gpio1 28 GPIO_ACTIVE_LOW>;
+    //reset-delay-us = <100>;
 };
 
 &phy_sel {
